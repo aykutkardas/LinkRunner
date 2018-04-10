@@ -14,8 +14,19 @@
 class LinkRunner {
 
 	public $target;
-	public $list = [];
+	private $list = [];
 	public $limit = 100;
+
+	private function list_push($link, $prefix = '')
+	{
+		if (!in_array($link, $this->list))
+			$this->list[] = $prefix . $link;
+	}
+
+	public function get_list()
+	{
+		return $this->list;
+	}
 
 	public function get_site_content($url)
 	{
@@ -35,7 +46,6 @@ class LinkRunner {
 			$site = curl_exec($ch);  
 			curl_close($ch);  
 		} else {  
-			// global $site;  
 			$site = file_get_contents($url);  
 		}  
 
@@ -51,48 +61,40 @@ class LinkRunner {
 
 	public function create_sitemap()
 	{
-		$this->list = [$this->target];
+		$this->list = [rtrim($this->target, '/')];
 		$targetHost = parse_url($this->target)['host'];
 
 		for($i = 0; $i < count($this->list); $i++) {
 
 			$linkContent = $this->get_site_content($this->list[$i]);
 			$newList = $this->link_finder($linkContent)[1];
+
 			for($j = 0; $j < count($newList); $j++) {
 
 				if(count($this->list) === $this->limit) break;
 
-				$link = $newList[$j];
+				$link = rtrim($newList[$j], '/');
+
 				if (preg_match('#^https?://#i', $link) === 1) {
-
-						if($targetHost === parse_url($link)["host"]) {
-								if(!in_array($newList[$j], $this->list))
-										$this->list[] = $newList[$j];
-						}
-
-
-				} else if(substr($newList[$j], 0, 1) == "/") {
-
-					$newLink = $this->target . $newList[$j];
-					if(!in_array($newLink, $this->list))
-							$this->list[] = $newLink;
+					if($targetHost === parse_url($link)["host"])
+							$this->list_push($link);
+				} else if(mb_substr($link, 0, 1) == '/') {
+					$this->list_push($link, $this->target);
 				}
 			}
 		}
 	}
 
 	public function save_sitemap()
-	{
-		if(file_exists('./sitemap.txt'))
-			unlink('./sitemap.txt');	
-
-		touch('./sitemap.txt');
+	{	
+		$fileName = parse_url($this->target)['host'] . '_sitemap.txt';
 		
+		touch($fileName);
+		
+		$content = implode("\r\n", $this->list);
 
-		$sitemap = fopen('./sitemap.txt', 'w');
-		for($i = 0; $i < count($this->list); $i++) {
-			file_put_contents('./sitemap.txt', $this->list[$i].PHP_EOL , FILE_APPEND | LOCK_EX);
-		}
-		fclose($sitemap);
+		$file = fopen($fileName , 'w');
+		fwrite($file, $content);
+		fclose($file);
 	}
 }

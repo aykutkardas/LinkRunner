@@ -7,7 +7,7 @@
 
 	$linkRunner->target = 'https://devdocs.io';
 
-	$linkRunner->limit = 5;
+	$linkRunner->limit = 50;
 
 	$linkRunner->create_sitemap();
 

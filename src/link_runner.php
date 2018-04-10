@@ -1,11 +1,14 @@
 <?php
 
 /*
- * 
- *  
- * 
+ * "LinkRunner"
+ *  Creator Sitemap with PHP
+ *  @author: Aykut Kardaş
+ *  github: https://github.com/aykutkardas/LinkRunner
  */
-
+	
+    
+   
 
 
 class LinkRunner {
